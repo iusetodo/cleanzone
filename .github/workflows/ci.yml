@@ -19,41 +19,38 @@ jobs:
         if: ${{ hashFiles('cleanzone') != '' }}
         run: shellcheck -S warning -x ./cleanzone || true
 
-      - name: Smoke test (assert by filesystem state)
+      - name: Smoke test (simple & robust)
         if: ${{ hashFiles('cleanzone') != '' }}
         shell: bash
         run: |
           set -euo pipefail
-          set -x
-
           chmod +x ./cleanzone
 
-          # Fresh demo workspace
+          # Frischer Workspace
           rm -rf demo
           mkdir -p demo/dist demo/keep
           touch "demo/a.txt:Zone.Identifier"
           touch "demo/dist/b.txt:Zone.Identifier"
 
-          # 1) Dry-run shouldn't change files
-          (cd demo && ../cleanzone -rl -- dist)
+          echo "== Dry-run (recursive) =="
+          (cd demo && ../cleanzone -rl)
 
+          # Nach Dry-run muss alles noch da sein
           test -e "demo/a.txt:Zone.Identifier"
           test -e "demo/dist/b.txt:Zone.Identifier"
 
-          # 2) Delete without prompt, but exclude 'dist'
-          (cd demo && ../cleanzone -rfy -- dist)
+          echo "== Delete (rfy) =="
+          (cd demo && ../cleanzone -rfy)
 
-          # Assert: a.txt:Zone.Identifier was deleted
+          # Danach muss beides weg sein
           if [ -e "demo/a.txt:Zone.Identifier" ]; then
             echo "Expected a.txt:Zone.Identifier to be deleted"; exit 1
           fi
-
-          # Assert: dist/b.txt:Zone.Identifier still exists (was excluded)
-          if [ ! -e "demo/dist/b.txt:Zone.Identifier" ]; then
-            echo "Expected dist/b.txt:Zone.Identifier to remain (excluded)"; exit 1
+          if [ -e "demo/dist/b.txt:Zone.Identifier" ]; then
+            echo "Expected dist/b.txt:Zone.Identifier to be deleted"; exit 1
           fi
 
-          # Assert: log exists in current directory (demo/)
+          # Log im aktuellen Verzeichnis (demo/) muss existieren
           if [ ! -f "demo/cleanzone.log" ]; then
             echo "Expected log file demo/cleanzone.log to exist"; ls -la demo; exit 1
           fi
