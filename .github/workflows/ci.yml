@@ -1,0 +1,47 @@
+name: ci
+on: [push, pull_request, workflow_dispatch]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        if: ${{ hashFiles('cleanzone') != '' }}
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: ShellCheck (non-blocking)
+        if: ${{ hashFiles('cleanzone') != '' }}
+        run: shellcheck -S warning -x ./cleanzone || true
+
+      - name: Smoke test
+        if: ${{ hashFiles('cleanzone') != '' }}
+        shell: bash
+        run: |
+          set -e
+          chmod +x ./cleanzone
+
+          mkdir -p demo/dist demo/keep
+          touch "demo/a.txt:Zone.Identifier"
+          touch "demo/dist/b.txt:Zone.Identifier"
+
+          echo "== Dry-run (recursive) with -- excludes =="
+          out=$(cd demo && ../cleanzone -rl -- dist)
+          echo "$out" | grep -F "a.txt:Zone.Identifier" >/dev/null
+          if echo "$out" | grep -F -q "dist/b.txt:Zone.Identifier"; then
+            echo "Should have excluded dist/"; exit 1; fi
+
+          echo "== Delete without prompt (rfy) =="
+          (cd demo && ../cleanzone -rfy -- dist)
+
+          echo "== Logging in current directory =="
+          test -f "demo/cleanzone.log"
+
+      - name: Note if script is missing
+        if: ${{ hashFiles('cleanzone') == '' }}
+        run: echo "No 'cleanzone' file found in repo root; skipping checks."
