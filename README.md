@@ -3,7 +3,7 @@
 
 ![Shell](https://img.shields.io/badge/shell-Bash-green)
 ![Platform](https://img.shields.io/badge/platform-WSL2%20%7C%20Linux-orange)
-![Release](https://img.shields.io/badge/release-v1.1.0-brightgreen)
+![release](https://img.shields.io/github/v/tag/Rufnex/cleanzone?label=release)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![CI](https://github.com/Rufnex/cleanzone/actions/workflows/ci.yml/badge.svg)
 
