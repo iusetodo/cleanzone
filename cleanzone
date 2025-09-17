@@ -96,7 +96,7 @@ while getopts "rfx:t:ylhVv" opt; do
       ;;
     y) auto_yes=true ;;
     l) mode="list" ;;
-    V) echo "cleanzone 1.1.0"; exit 0 ;;
+    V) echo "cleanzone 1.0.0"; exit 0 ;;
     v) verbose=true ;;
     h) show_help ;;
     *) show_help ;;
