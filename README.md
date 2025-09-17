@@ -5,6 +5,7 @@
 ![Platform](https://img.shields.io/badge/platform-WSL2%20%7C%20Linux-orange)
 ![Release](https://img.shields.io/badge/release-v1.1.0-brightgreen)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![CI](https://github.com/Rufnex/cleanzone/actions/workflows/ci.yml/badge.svg)
 
 ---
 
@@ -226,64 +227,11 @@ postgres_data
 
 ---
 
-## 🧪 Mini-CI (ShellCheck + Smoke-Test)
+## CI
+Dieses Repo nutzt GitHub Actions (ShellCheck, shfmt, Smoke-Test).
+Workflow-Datei: [.github/workflows/ci.yml](.github/workflows/ci.yml)
 
-Add this workflow at **`.github/workflows/ci.yml`** to auto‑check your script on each push/PR (and manually via *Run workflow*).
-
-```yaml
-name: ci
-on: [push, pull_request, workflow_dispatch]
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  lint-and-smoke:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install ShellCheck
-        if: ${{ hashFiles('cleanzone') != '' }}
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
-
-      - name: ShellCheck (non-blocking)
-        if: ${{ hashFiles('cleanzone') != '' }}
-        run: shellcheck -S warning -x ./cleanzone || true
-
-      - name: Smoke test
-        if: ${{ hashFiles('cleanzone') != '' }}
-        shell: bash
-        run: |
-          set -e
-          chmod +x ./cleanzone
-
-          mkdir -p demo/dist demo/keep
-          touch "demo/a.txt:Zone.Identifier"
-          touch "demo/dist/b.txt:Zone.Identifier"
-
-          echo "== Dry-run (recursive) with -- excludes =="
-          out=$(cd demo && ../cleanzone -rl -- dist)
-          echo "$out" | grep -F "a.txt:Zone.Identifier" >/dev/null
-          if echo "$out" | grep -F -q "dist/b.txt:Zone.Identifier"; then
-            echo "Should have excluded dist/"; exit 1; fi
-
-          echo "== Delete without prompt (rfy) =="
-          (cd demo && ../cleanzone -rfy -- dist)
-
-          echo "== Logging in current directory =="
-          test -f "demo/cleanzone.log"
-
-      - name: Note if script is missing
-        if: ${{ hashFiles('cleanzone') == '' }}
-        run: echo "No 'cleanzone' file found in repo root; skipping checks."
-```
-
-Add the **CI badge** if desired:
-```
-![CI](https://github.com/USER/REPO/actions/workflows/ci.yml/badge.svg)
-```
+![CI](https://github.com/Rufnex/cleanzone/actions/workflows/ci.yml/badge.svg)
 
 ---
 
