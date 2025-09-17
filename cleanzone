@@ -1,6 +1,8 @@
 #!/bin/bash
 # cleanzone – safe listing/removal of :Zone.Identifier files (WSL2/Windows)
 # Version: 1.0.0 
+# SPDX-License-Identifier: MIT
+# Homepage: https://github.com/Rufnex/cleanzone
 #
 # Safe defaults:
 #   - Default = dry-run (list only). Real deletion only with -f.
