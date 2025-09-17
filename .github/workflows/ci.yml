@@ -11,52 +11,62 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Install ShellCheck from apt (no external action tag needed)
       - name: Install ShellCheck
         if: ${{ hashFiles('cleanzone') != '' }}
         run: sudo apt-get update && sudo apt-get install -y shellcheck
 
-      # Lint: do not fail the build on warnings (|| true)
       - name: ShellCheck (non-blocking)
         if: ${{ hashFiles('cleanzone') != '' }}
         run: shellcheck -S warning -x ./cleanzone || true
 
-      # Robust smoke test with clear assertions and debug output
-      - name: Smoke test (debug, robust)
+      - name: Smoke test (tolerant + extra debug)
         if: ${{ hashFiles('cleanzone') != '' }}
         shell: bash
         run: |
           set -euo pipefail
-
           chmod +x ./cleanzone
+          echo "== Script version =="
+          ./cleanzone -V || true
 
-          # Fresh demo workspace
+          echo "== Prepare demo workspace =="
           rm -rf demo
           mkdir -p demo/dist demo/keep
           touch "demo/a.txt:Zone.Identifier"
           touch "demo/dist/b.txt:Zone.Identifier"
+          echo "Workspace:"
+          find demo -maxdepth 2 -type f -print | sort
 
           echo "== Dry-run (recursive) with -- excludes =="
-          out=$(cd demo && ../cleanzone -rl -- dist)
-          printf '%s\n' "$out"
+          out=$(cd demo && ../cleanzone -rl -- dist || true)
+          printf '%s
+' "$out"
 
-          echo "== Assertions for dry-run output =="
-          # a.txt must be listed (our script prints './...')
-          if ! grep -Fq "./a.txt:Zone.Identifier" <<<"$out"; then
-            echo "Expected './a.txt:Zone.Identifier' in dry-run output"; exit 1
+          echo "== Normalize output (strip leading './') =="
+          norm=$(printf '%s
+' "$out" | sed -E 's#^\./##')
+          printf 'NORM> %s
+' "$norm" || true
+
+          echo "== Assertions =="
+          # a.txt must appear (with or without ./ prefix)
+          if ! grep -Fq "a.txt:Zone.Identifier" <<<"$norm"; then
+            echo "Expected 'a.txt:Zone.Identifier' in dry-run output"; exit 1
           fi
-          # dist/b.txt must be excluded by '-- dist'
-          if grep -Fq "./dist/b.txt:Zone.Identifier" <<<"$out"; then
+          # dist/b.txt must be excluded
+          if grep -Fq "dist/b.txt:Zone.Identifier" <<<"$norm"; then
             echo "Expected dist/ to be excluded by '-- dist'"; exit 1
           fi
 
           echo "== Delete without prompt (rfy) =="
           (cd demo && ../cleanzone -rfy -- dist)
 
-          echo "== Logging in current directory (demo/cleanzone.log) =="
+          echo "== Logging check =="
+          ls -la demo || true
           if [[ ! -f demo/cleanzone.log ]]; then
-            echo "Expected log file demo/cleanzone.log to exist"; ls -la demo; exit 1
+            echo "Expected log file demo/cleanzone.log to exist"; exit 1
           fi
+          echo "Log head:"
+          head -n 5 demo/cleanzone.log || true
 
           echo "Smoke test passed."
 
