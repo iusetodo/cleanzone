@@ -1,0 +1,257 @@
+#!/bin/bash
+# cleanzone – safe listing/removal of :Zone.Identifier files (WSL2/Windows)
+# Version: 1.1.0 
+#
+# Safe defaults:
+#   - Default = dry-run (list only). Real deletion only with -f.
+#   - Confirmation when many matches (threshold). Configurable via -t and CLEANZONE_THRESHOLD.
+#   - Logging of removed files to ./cleanzone.log (current working directory).
+# Implementation details:
+#   - Robust file handling via find -print0 + mapfile -d ''
+#   - Batch delete (single rm call) for performance
+#   - Directory pruning with -prune for common heavy folders
+#   - Project and global ignore files supported; duplicates deduplicated
+#   - Short option clustering supported (e.g., -rfy)
+#   - Everything after `--` is treated as extra excludes (alternative to -x)
+#   - Verbose mode (-v): capture find warnings, summarize at the end, and log details
+#
+# Note:
+#   -t <N> overrides CLEANZONE_THRESHOLD. Default threshold is 100.
+
+set -o pipefail
+
+# Fast path for --version (before getopts)
+if [[ "${1-}" == "--version" ]]; then
+  echo "cleanzone 1.1.0"
+  exit 0
+fi
+
+mode="list"            # default: dry-run (list only)
+recursive=false
+auto_yes=false         # -y: skip confirmation (when -f is set)
+logfile="$PWD/cleanzone.log"  # write logs to current directory
+verbose=false          # -v: show suppressed find warnings at the end
+
+# Default excludes for performance (can be extended via .cleanzoneignore or -x/--)
+default_excl=(.git node_modules .venv)
+
+# Return true if argument is an unsigned integer
+is_uint() { [[ "$1" =~ ^[0-9]+$ ]]; }
+
+# Confirmation threshold: env fallback -> default 100; can be overridden via -t
+threshold="${CLEANZONE_THRESHOLD:-100}"
+is_uint "$threshold" || threshold=100
+
+show_help() {
+  cat <<EOF
+cleanzone v1.1.0 — remove :Zone.Identifier files (WSL2)
+
+Usage: cleanzone [-r] [-f] [-y] [-l] [-t <N>] [-x "PATTERN ..."] [-- EXCLUDES...] [-h|-V|--version]
+
+  -r               Recursive (include subdirectories)
+  -f               Force delete (default is dry-run: list only)
+  -y               Proceed without prompt (when many matches)
+  -l               List only (explicit dry-run)
+  -t N             Confirmation threshold (default 100; 0 = always ask)
+  -x "LIST"        Additional excludes (space-separated). May be repeated.
+  -- EXCLUDES...   Alternative to -x: everything after `--` is treated as an exclude.
+  -h               Help
+  -V, --version    Show version and exit
+  -v               Show suppressed find warnings at the end (verbose)
+
+Environment variable:
+  CLEANZONE_THRESHOLD=N  # sets the default threshold (overridden by -t)
+
+Recommended flow (flag clustering supported, e.g., -rfy):
+  1) cleanzone -rl               # Dry-run: recursive list only
+  2) cleanzone -rf               # really delete (prompt at threshold)
+  3) cleanzone -rfy              # delete without prompt
+  4) cleanzone -rf -t200         # prompt only from 200 files
+
+Exclude examples:
+  cleanzone -rf -x "dist build .cache"
+  cleanzone -rf -- dist build .cache   # alternative without -x
+
+Log:
+  Deleted paths -> ./cleanzone.log (current directory; falls back to HOME if not writable)
+EOF
+  exit 0
+}
+
+# Parse short options (clustered flags supported; -x and -t accept values)
+extra_excl=()
+while getopts "rfx:t:ylhVv" opt; do
+  case $opt in
+    r) recursive=true ;;
+    f) mode="delete" ;;
+    x) read -r -a _one_list <<< "$OPTARG"; extra_excl+=("${_one_list[@]}") ;;
+    t)
+      if is_uint "$OPTARG"; then
+        threshold="$OPTARG"
+      else
+        echo "⚠️  Invalid value for -t: '$OPTARG' (use a number, e.g., 150)"; exit 2
+      fi
+      ;;
+    y) auto_yes=true ;;
+    l) mode="list" ;;
+    V) echo "cleanzone 1.1.0"; exit 0 ;;
+    v) verbose=true ;;
+    h) show_help ;;
+    *) show_help ;;
+  esac
+done
+
+# Support for `-- EXCLUDES...` (and any remaining positional arguments)
+shift $((OPTIND - 1))
+if [[ "${1-}" == "--" ]]; then shift; fi
+if (($#)); then
+  # Treat all remaining tokens as excludes (alternative to -x)
+  extra_excl+=("$@")
+fi
+
+# Build exclude list
+excludes=("${default_excl[@]}")
+
+# Load project-specific ignores first (takes precedence), else global
+if [[ -f "./.cleanzoneignore" ]]; then
+  while IFS= read -r line; do
+    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+    excludes+=("$line")
+  done < "./.cleanzoneignore"
+elif [[ -f "$HOME/.cleanzoneignore" ]]; then
+  while IFS= read -r line; do
+    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+    excludes+=("$line")
+  done < "$HOME/.cleanzoneignore"
+fi
+
+# Append ad-hoc excludes from -x or from `--`
+if ((${#extra_excl[@]})); then
+  excludes+=("${extra_excl[@]}")
+fi
+
+# Deduplicate excludes
+declare -A seen; uniq_excl=()
+for e in "${excludes[@]}"; do
+  [[ -n "$e" && -z "${seen[$e]}" ]] && uniq_excl+=("$e") && seen["$e"]=1
+done
+excludes=("${uniq_excl[@]}")
+
+# Build find command
+if $recursive; then
+  cmd=(find .)
+  if ((${#excludes[@]})); then
+    # -prune heavy directories
+    cmd+=(-type d \( ); first=true
+    for pat in "${excludes[@]}"; do
+      $first || cmd+=(-o); first=false
+      cmd+=(-path "*/$pat")
+    done
+    cmd+=( \) -prune -o )
+  fi
+  cmd+=( -type f -name '*:Zone.Identifier' -print0 )
+else
+  cmd=(find . -maxdepth 1 -type f -name '*:Zone.Identifier' -print0)
+fi
+
+# Capture find warnings (e.g., Permission denied) and summarize at the end
+warnfile="$(mktemp)"
+trap 'rm -f "$warnfile"' EXIT
+
+# Collect matches (null-terminated, safe for spaces/newlines)
+mapfile -d '' files < <("${cmd[@]}" 2> "$warnfile")
+count=${#files[@]}
+
+# Prepare warning summary & logging now (independent of mode)
+warn_summary=""
+warn_count=$(wc -l < "$warnfile" | tr -d '[:space:]')
+if [[ -n "$warn_count" && "$warn_count" -gt 0 ]]; then
+  # Ensure log file (also in list mode)
+  if ! touch "$logfile" 2>/dev/null; then
+    log_alt="${HOME}/.cleanzone.log"
+    if touch "$log_alt" 2>/dev/null; then
+      logfile="$log_alt"
+    else
+      logfile=""
+    fi
+  fi
+
+  # Deduplicate and write to log as WARN entries
+  if [[ -n "$logfile" ]]; then
+    while IFS= read -r line; do
+      [[ -z "$line" ]] && continue
+      printf '[%s] WARN find: %s
+' "$(date +'%Y-%m-%d %H:%M:%S')" "$line" >> "$logfile"
+    done < <(sort -u "$warnfile")
+  fi
+
+  warn_summary="ℹ️  Suppressed find warnings: $warn_count"
+  [[ -n "$logfile" ]] && warn_summary+=" (logged to $logfile)"
+
+  # Optionally print to terminal when -v is set
+  if $verbose; then
+    echo "⚠️  find warnings ($warn_count):"
+    cat "$warnfile"
+  fi
+fi
+
+if ((count==0)); then
+  if [[ "$mode" == "delete" ]]; then
+    echo "✅ Nothing to do (no :Zone.Identifier files)."
+  else
+    echo "🔎 No :Zone.Identifier files found."
+  fi
+  [[ -n "$warn_summary" ]] && echo "$warn_summary"
+  exit 0
+fi
+
+# Dry-run (default)
+if [[ "$mode" == "list" ]]; then
+  printf '%s
+' "${files[@]}"
+  echo "🔎 $count file(s) found. (Dry-run, nothing deleted)"
+  [[ -n "$warn_summary" ]] && echo "$warn_summary"
+  exit 0
+fi
+
+# Delete mode (with threshold confirmation & logging)
+if ! $auto_yes && (( count >= threshold )); then
+  echo "⚠️  You are about to delete $count file(s) (threshold: $threshold). Continue? [y/N]"
+  read -r reply
+  case "$reply" in
+    y|Y|yes|YES) : ;;
+    *) echo "Aborted."; exit 1 ;;
+  esac
+fi
+
+# Prepare log file: try PWD first, then HOME as fallback
+if ! touch "$logfile" 2>/dev/null; then
+  log_alt="${HOME}/.cleanzone.log"
+  if touch "$log_alt" 2>/dev/null; then
+    echo "ℹ️  Could not write ./cleanzone.log, using: $log_alt"
+    logfile="$log_alt"
+  else
+    echo "⚠️  Could not create any log file."
+    logfile=""
+  fi
+fi
+
+timestamp() { date +"%Y-%m-%d %H:%M:%S"; }
+to_delete=("${files[@]}")
+
+# Batch delete
+rm -f -- "${to_delete[@]}"
+
+# Count successfully removed files and log them
+deleted=0
+for f in "${to_delete[@]}"; do
+  if [[ ! -e "$f" ]]; then
+    ((deleted++))
+    [[ -n "$logfile" ]] && printf '[%s] removed: %s
+' "$(timestamp)" "$f" >> "$logfile"
+  fi
+done
+
+echo "✅ Removed $deleted file(s)."
+[[ -n "$logfile" ]] && echo "📝 Log: $logfile"
+[[ -n "$warn_summary" ]] && echo "$warn_summary"
