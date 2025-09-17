@@ -1,6 +1,6 @@
 #!/bin/bash
 # cleanzone – safe listing/removal of :Zone.Identifier files (WSL2/Windows)
-# Version: 1.1.0 
+# Version: 1.0.0 
 #
 # Safe defaults:
 #   - Default = dry-run (list only). Real deletion only with -f.
@@ -22,7 +22,7 @@ set -o pipefail
 
 # Fast path for --version (before getopts)
 if [[ "${1-}" == "--version" ]]; then
-  echo "cleanzone 1.1.0"
+  echo "cleanzone 1.0.0"
   exit 0
 fi
 
