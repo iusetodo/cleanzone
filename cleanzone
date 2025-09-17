@@ -46,7 +46,7 @@ is_uint "$threshold" || threshold=100
 
 show_help() {
   cat <<EOF
-cleanzone v1.1.0 — remove :Zone.Identifier files (WSL2)
+cleanzone v1.0.0 — remove :Zone.Identifier files (WSL2)
 
 Usage: cleanzone [-r] [-f] [-y] [-l] [-t <N>] [-x "PATTERN ..."] [-- EXCLUDES...] [-h|-V|--version]
 
