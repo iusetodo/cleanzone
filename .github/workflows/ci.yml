@@ -38,14 +38,11 @@ jobs:
 
           echo "== Dry-run (recursive) with -- excludes =="
           out=$(cd demo && ../cleanzone -rl -- dist || true)
-          printf '%s
-' "$out"
+          printf '%s' "$out"
 
           echo "== Normalize output (strip leading './') =="
-          norm=$(printf '%s
-' "$out" | sed -E 's#^\./##')
-          printf 'NORM> %s
-' "$norm" || true
+          norm=$(printf '%s' "$out" | sed -E 's#^\./##')
+          printf 'NORM> %s' "$norm" || true
 
           echo "== Assertions =="
           # a.txt must appear (with or without ./ prefix)
