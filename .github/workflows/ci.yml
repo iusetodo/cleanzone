@@ -19,44 +19,42 @@ jobs:
         if: ${{ hashFiles('cleanzone') != '' }}
         run: shellcheck -S warning -x ./cleanzone || true
 
-      - name: Smoke test (simple & robust)
+      - name: Smoke test (count & log based)
         if: ${{ hashFiles('cleanzone') != '' }}
         shell: bash
         run: |
           set -euo pipefail
           chmod +x ./cleanzone
 
-          # Frischer Workspace
+          # Fresh workspace
           rm -rf demo
           mkdir -p demo/dist demo/keep
-          touch "demo/a.txt:Zone.Identifier"
-          touch "demo/dist/b.txt:Zone.Identifier"
+          touch "demo/a.txt:Zone.Identifier" "demo/dist/b.txt:Zone.Identifier"
 
-          echo "== Dry-run (recursive) =="
+          echo "== Dry-run =="
           (cd demo && ../cleanzone -rl)
 
-          # Nach Dry-run muss alles noch da sein
-          test -e "demo/a.txt:Zone.Identifier"
-          test -e "demo/dist/b.txt:Zone.Identifier"
+          cnt_before=$(find demo -type f -name '*:Zone.Identifier' | wc -l | tr -d '[:space:]')
+          echo "count_before=$cnt_before"
+          if [ "$cnt_before" != "2" ]; then
+            echo "Expected 2 ADS files before delete"; find demo -type f -maxdepth 2 -print; exit 1
+          fi
 
-          echo "== Delete (rfy) =="
+          echo "== Delete =="
           (cd demo && ../cleanzone -rfy)
 
-          # Danach muss beides weg sein
-          if [ -e "demo/a.txt:Zone.Identifier" ]; then
-            echo "Expected a.txt:Zone.Identifier to be deleted"; exit 1
-          fi
-          if [ -e "demo/dist/b.txt:Zone.Identifier" ]; then
-            echo "Expected dist/b.txt:Zone.Identifier to be deleted"; exit 1
+          cnt_after=$(find demo -type f -name '*:Zone.Identifier' | wc -l | tr -d '[:space:]')
+          echo "count_after=$cnt_after"
+          if [ "$cnt_after" != "0" ]; then
+            echo "Expected 0 ADS files after delete"; find demo -type f -maxdepth 2 -print; exit 1
           fi
 
-          # Log im aktuellen Verzeichnis (demo/) muss existieren
-          if [ ! -f "demo/cleanzone.log" ]; then
+          # Log should exist and contain at least one 'removed:' line
+          if [ ! -f demo/cleanzone.log ]; then
             echo "Expected log file demo/cleanzone.log to exist"; ls -la demo; exit 1
+          fi
+          if ! grep -Fq "removed:" demo/cleanzone.log; then
+            echo "Expected 'removed:' entries in demo/cleanzone.log"; echo "--- log head ---"; head -n 50 demo/cleanzone.log || true; exit 1
           fi
 
           echo "Smoke test passed."
-
-      - name: Note if script is missing
-        if: ${{ hashFiles('cleanzone') == '' }}
-        run: echo "No 'cleanzone' file found in repo root; skipping checks."
